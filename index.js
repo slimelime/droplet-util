@@ -1,5 +1,5 @@
-const LOGGGER = require('./src/logger');
+const LOGGER = require('./lib/logger');
 
 module.exports = {
-    LOGGGER
+    LOGGER
 };
