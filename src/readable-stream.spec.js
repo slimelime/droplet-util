@@ -1,10 +1,9 @@
-const through = require('through2');
+const MemoryStream = require('memorystream');
 
-const logger = require('./logger');
 const collections = require('./collections');
 const readableStream = require('./readable-stream');
 
-function* incremental(take = 10) {
+function* incrementalGenerator(take = 10) {
     let i = 1;
     while (i <= take) {
         yield {id: i};
@@ -12,7 +11,7 @@ function* incremental(take = 10) {
     }
 }
 
-async function* incrementalAsync(take = 10) {
+async function* incrementalGeneratorAsync(take = 10) {
     let i = 1;
     while (i <= take) {
         yield {id: i};
@@ -20,34 +19,116 @@ async function* incrementalAsync(take = 10) {
     }
 }
 
-async function* inctrementalBatchesAsync() {
-    yield collections.iterator([{id: '1-1'}, {id: '1-2'}], {metadata: collections.lazy({ConsumedCapacity: 2})});
-    yield collections.iterator([{id: '2-1'}, {id: '2-2'}, {id: '2-3'}, {id: '2-4'}, {id: '2-5'}], {metadata: collections.lazy({ConsumedCapacity: 5})});
-    yield collections.iterator([{id: '3-1'}, {id: '3-2'}, {id: '3-3'}], {metadata: collections.lazy({ConsumedCapacity: 3})});
+async function* incrementalBatchesAsync() {
+    yield collections.iterator([{id: 1}, {id: 2}],
+        {
+            metadata: collections.lazy({
+                "ConsumedCapacity": {
+                    "TableName": "SirenCommandExecutionStateTest",
+                    "CapacityUnits": 2
+                }
+            })
+        });
+    yield collections.iterator([{id: 3}, {id: 4}, {id: 5}, {id: 6}, {id: 7}],
+        {
+            metadata: collections.lazy({
+                "ConsumedCapacity": {
+                    "TableName": "SirenCommandExecutionStateTest",
+                    "CapacityUnits": 5
+                }
+            })
+        });
+    yield collections.iterator([{id: 8}, {id: 9}, {id: 10}],
+        {
+            metadata: collections.lazy({
+                "ConsumedCapacity": {
+                    "TableName": "SirenCommandExecutionStateTest",
+                    "CapacityUnits": 3
+                }
+            })
+        });
 }
-
-const unique = {};
-
-const echoStream = through({objectMode: true, highWaterMark: 5}, function (chunk, enc, next) {
-    if (chunk.id in unique) this.emit('error', new Error(`Duplicate Data Record: [${JSON.stringify(chunk, null, 0)}]`));
-    unique[chunk.id] = chunk;
-    logger.logLine('>>>>>', chunk);
-    next(null, chunk);
-});
 
 describe('readable-stream', () => {
-    it('throttles batches using Consumed Capacity in penalty mode', async done => {
-        readableStream.fromAsyncGeneratorOfBatches({
-            rate: 1,
-            interval: 'second',
-            burst: 1
-        }, await inctrementalBatchesAsync())
-            .pipe(echoStream)
-            .resume()
+    const defaultOptions = {objectMode: true};
+    const expectedData = [...incrementalGenerator()];
+
+    it('converts a generator to a readable stream', done => {
+        const memoryWriteStream = MemoryStream.createWriteStream(null, {objectMode: true});
+        const readStream = readableStream.fromGenerator(incrementalGenerator(), defaultOptions);
+        readStream
+            .pipe(memoryWriteStream)
             .on('error', error => done.fail(error))
-            .on('end', () => {
-                logger.log('END EVENT RECEIVED');
-                done();
+            .on('finish', () => {
+                try {
+                    expect(memoryWriteStream.queue).toEqual(expectedData);
+                    done();
+                } catch (error) {
+                    done.fail(error);
+                }
             });
-    }, 30000);
+    });
+
+    it('converts an async generator to a readable stream', done => {
+        const memoryWriteStream = MemoryStream.createWriteStream(null, {objectMode: true});
+        const readStream = readableStream.fromAsyncGenerator(incrementalGeneratorAsync(), defaultOptions);
+        readStream
+            .pipe(memoryWriteStream)
+            .on('error', error => done.fail(error))
+            .on('finish', () => {
+                try {
+                    expect(memoryWriteStream.queue).toEqual(expectedData);
+                    done();
+                } catch (error) {
+                    done.fail(error);
+                }
+            });
+    });
+
+    it('converts an async generator of batches to a readable stream, throttles batches using Consumed Capacity in penalty mode', async done => {
+        const memoryWriteStream = MemoryStream.createWriteStream(null, {objectMode: true});
+        const readStream = readableStream.fromAsyncGeneratorOfBatches(incrementalBatchesAsync(),
+            {
+                ...defaultOptions,
+                rate: 5,
+                interval: 'second',
+                burst: 1,
+                consumedCapacityUnits: ({ConsumedCapacity: {CapacityUnits}}) => CapacityUnits
+            });
+        readStream
+            .pipe(memoryWriteStream)
+            .on('error', error => done.fail(error))
+            .on('finish', () => {
+                try {
+                    expect(memoryWriteStream.queue).toEqual(expectedData);
+                    done();
+                } catch (error) {
+                    done.fail(error);
+                }
+            });
+    });
+
+    it('converts an async generator of batches in an RX.Subject, throttles batches using Consumed Capacity in penalty mode', async done => {
+        const actualData = [];
+        const throttled$ = readableStream.throttledStreamFromAsyncGeneratorOfBatches(incrementalBatchesAsync(),
+            {
+                ...defaultOptions,
+                rate: 5,
+                interval: 'second',
+                burst: 1,
+                consumedCapacityUnits: ({ConsumedCapacity: {CapacityUnits}}) => CapacityUnits
+            });
+
+        throttled$.subscribe(
+            value => actualData.push(value),
+            error => done.fail(error),
+            () => {
+                try {
+                    expect(actualData).toEqual(expectedData);
+                    done();
+                } catch (error) {
+                    done.fail(error);
+                }
+            });
+    });
 });

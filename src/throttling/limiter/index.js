@@ -9,10 +9,10 @@ const TokenBucket = require('./tokenBucket');
 const logger = require('../../logger');
 
 RateLimiter.prototype.getTokens = async function (count) {
-    logger.logLine(`getTokens(${count})@${moment().format('HH:mm:ss:SSS')}`);
+    // logger.logLine(`getTokens(${count})@${moment().format('HH:mm:ss:SSS')}`);
     const that = this;
     if (count <= this.tokenBucket.bucketSize) {
-        logger.logLine(`getTokens::bounded@${moment().format('HH:mm:ss:SSS')}`, count);
+        // logger.logLine(`getTokens::bounded@${moment().format('HH:mm:ss:SSS')}`, count);
         return new Promise((resolve, reject) => {
             this.removeTokens(count, (err, remaining) => {
                 if (err) {
@@ -27,13 +27,13 @@ RateLimiter.prototype.getTokens = async function (count) {
     const tokensPerInterval = this.tokenBucket.tokensPerInterval;
     const shapingTimeMs = Math.ceil(count * (interval / tokensPerInterval));
     const numIntervals = shapingTimeMs / interval;
-    logger.logLine(`getTokens::burst:penalty@${moment().format('HH:mm:ss:SSS')}`, {
-        count,
-        interval,
-        tokensPerInterval,
-        totalWaitTimeMs: shapingTimeMs
-    });
-    logger.line(80);
+    // logger.logLine(`getTokens::burst:penalty@${moment().format('HH:mm:ss:SSS')}`, {
+    //     count,
+    //     interval,
+    //     tokensPerInterval,
+    //     totalWaitTimeMs: shapingTimeMs
+    // });
+    // logger.line(80);
     let consumed = 0;
     let chunk = this.tokenBucket.bucketSize;
     while (consumed < count) {
@@ -49,8 +49,8 @@ RateLimiter.prototype.getTokens = async function (count) {
             });
         });
 
-        logger.logLine(`getTokens::chunk@${moment().format('HH:mm:ss:SSS')}`, {consumed, count, chunk});
-        logger.line(80);
+        // logger.logLine(`getTokens::chunk@${moment().format('HH:mm:ss:SSS')}`, {consumed, count, chunk});
+        // logger.line(80);
     }
     return consumed;
 };

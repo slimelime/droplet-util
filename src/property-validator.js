@@ -10,7 +10,8 @@ const {UnretryableError} = errors;
 module.exports = {
     hasRequiredProperties,
     getMissingProperties,
-    ensureEnvironmentVariables
+    ensureEnvironmentVariables,
+    ensureObjectProperties
 
 };
 
@@ -49,4 +50,18 @@ function ensureEnvironmentVariables(...args) {
         throw error;
     }
     return envVars;
+}
+
+function ensureObjectProperties(objectToValidate, requiredProperties) {
+    if (!hasRequiredProperties(objectToValidate, requiredProperties)) {
+        const error = new UnretryableError(
+            `Missing Object Properties: [${getMissingProperties(objectToValidate, requiredProperties)}]`,
+            errors.codes.Groups.Config,
+            errors.codes.Config.$Object,
+            errors.codes.Config.Properties
+        );
+        throw error;
+    }
+
+    return '';
 }

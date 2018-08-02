@@ -14,7 +14,17 @@ async function invoke(functionName, payload, async = true, options = {}, params 
         Payload: JSON.stringify(payload),
         InvocationType: (async) ? 'Event' : 'RequestResponse'
     };
-    return lambda.invoke({...requiredParams, ...params}).promise();
+
+    const response = await (lambda.invoke({...requiredParams, ...params}).promise());
+
+    if (response.FunctionError !== undefined) {
+        if (typeof response.Payload !== 'string') {
+            throw response.Payload;
+        }
+        throw JSON.parse(response.Payload);
+    } else {
+        return response;
+    }
 }
 
 

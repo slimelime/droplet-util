@@ -45,14 +45,14 @@ const composeAsync = (...fns) => reduceAsync((fn1, fn2) => async (...args) => fn
 const flip = fn => (...args) => fn(...args.reverse());
 
 
-/** ----- FUTURE ----- **/
+/** ----- FUTURE -----
 // When the runtime supports async/generator functions without transpiling, we can check if a function is a generator or is async by using foo instanceof AsyncFunctionType for example
 const GeneratorFunctionType = (function* () {
 }).constructor;
 const AsyncFunctionType = (async function () {
 }).constructor;
 
-/** ----- FUTURE ----- **/
+----- FUTURE ----- **/
 
 const SymbolIterator = Symbol.iterator;
 const SymbolAsyncIterator = Symbol.asyncIterator;
@@ -198,7 +198,6 @@ const take = (n, enumerator) => iterator(takeGen(n, enumerator)); // TODO: imple
 function* skipGen(n, enumerator) {
     let done = false;
     while (!done && n-- > 0) {
-        console.log('skipGen::', n);
         ({done} = enumerator.next());
     }
     yield* enumerator;

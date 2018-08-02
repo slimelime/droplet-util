@@ -69,7 +69,7 @@ describe('idam-token-validator', () => {
             try {
                 await idamTokenValidator.verifyToken(idamPortal, idamToken, idamApplicationId);
             } catch (err) {
-                console.log(err);
+                // console.log(err);
                 expect(err.name).toEqual('AuthenticationError');
             }
         });

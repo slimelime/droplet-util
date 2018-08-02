@@ -20,10 +20,8 @@ async function* dataAsyncGeneratorOfPromises() {
     yield* dataIterable.map(coll.identityAsync);
 }
 
-const _fn1 = x => x + 10;
-const _fn2 = x => x * x;
-const fn1 = coll.which(_fn1);
-const fn2 = coll.which(_fn2);
+const fn1 = x => x + 10;
+const fn2 = x => x * x;
 
 const fn1Box = x => [fn1(x)];
 const fn2Box = x => [fn2(x)];
@@ -35,8 +33,7 @@ const fnReject = x => coll.identityAsync(Promise.reject('ERROR'));
 const fn1AsyncBox = x => coll.identityAsync(fn1Box(x));
 const fn2AsyncBox = x => coll.identityAsync(fn2Box(x));
 
-const _predicateEven = x => x % 2 === 0;
-const predicateEven = coll.which(_predicateEven);
+const predicateEven = x => x % 2 === 0;
 
 const predicateEvenAsync = x => coll.identityAsync(predicateEven(x));
 
@@ -70,43 +67,43 @@ describe('sync', () => {
     describe('map', () => {
         it('maps a function over an enumerable -> object values', () => {
             const result = coll.map(fn1, dataObject);
-            expect(result).toEqual(dataIterable.map(_fn1));
+            expect(result).toEqual(dataIterable.map(fn1));
         });
         it('maps a function over an enumerable -> iterable', () => {
             const result = coll.map(fn1, dataIterable);
-            expect(result).toEqual(dataIterable.map(_fn1));
+            expect(result).toEqual(dataIterable.map(fn1));
         });
         it('maps a function over an enumerable -> iterator', () => {
             const result = coll.map(fn1, dataIterator());
-            expect(result).toEqual(dataIterable.map(_fn1));
+            expect(result).toEqual(dataIterable.map(fn1));
         });
         it('maps a function over an enumerable -> generator', () => {
             const result = coll.map(fn1, dataGenerator());
-            expect(result).toEqual(dataIterable.map(_fn1));
+            expect(result).toEqual(dataIterable.map(fn1));
         });
         it('maps a function over an enumerable -> generator of promises', async () => {
             const result = coll.map(resolveArgs(fn1), dataGeneratorOfPromises());
             const results = await Promise.all(result);
-            expect(results).toEqual(dataIterable.map(_fn1));
+            expect(results).toEqual(dataIterable.map(fn1));
         });
     });
 
     describe('filter', () => {
         it('maps a function over an enumerable -> object values', () => {
             const result = coll.filter(predicateEven, dataObject);
-            expect(result).toEqual(dataIterable.filter(_predicateEven));
+            expect(result).toEqual(dataIterable.filter(predicateEven));
         });
         it('filters a function over an enumerable -> iterable', () => {
             const result = coll.filter(predicateEven, dataIterable);
-            expect(result).toEqual(dataIterable.filter(_predicateEven));
+            expect(result).toEqual(dataIterable.filter(predicateEven));
         });
         it('filters a function over an enumerable -> iterator', () => {
             const result = coll.filter(predicateEven, dataIterator());
-            expect(result).toEqual(dataIterable.filter(_predicateEven));
+            expect(result).toEqual(dataIterable.filter(predicateEven));
         });
         it('filters a function over an enumerable -> generator', () => {
             const result = coll.filter(predicateEven, dataGenerator());
-            expect(result).toEqual(dataIterable.filter(_predicateEven));
+            expect(result).toEqual(dataIterable.filter(predicateEven));
         });
 
         /*
@@ -299,8 +296,7 @@ describe('sync', () => {
 
     describe('compose= step-function/sum = reducing-function/reduce= pipeline-runner =~ transduce', () => {
         const expectedResult = 1321;
-        const _sum = (a, b) => a + b;
-        const sum = coll.which(_sum);
+        const sum = (a, b) => a + b;
 
         it('transduce using composed transducers * left * to right, over an enumerable -> object values', () => {
             const transducer = coll.compose(xform1, xform2, xform3);
@@ -333,58 +329,58 @@ describe('async', () => {
     describe('mapAsync', () => {
         it('maps an async function over an enumerable -> object values', async () => {
             const result = await coll.mapAsync(fn1Async, dataObject);
-            expect(result).toEqual(dataIterable.map(_fn1));
+            expect(result).toEqual(dataIterable.map(fn1));
         });
         it('maps an async function over an enumerable -> iterable', async () => {
             const result = await coll.mapAsync(fn1Async, dataIterable);
-            expect(result).toEqual(dataIterable.map(_fn1));
+            expect(result).toEqual(dataIterable.map(fn1));
         });
         it('maps an async function over an enumerable -> iterator', async () => {
             const result = await coll.mapAsync(fn1Async, dataIterator());
-            expect(result).toEqual(dataIterable.map(_fn1));
+            expect(result).toEqual(dataIterable.map(fn1));
         });
         it('maps an async function over an enumerable -> generator', async () => {
             const result = await coll.mapAsync(fn1Async, dataGenerator());
-            expect(result).toEqual(dataIterable.map(_fn1));
+            expect(result).toEqual(dataIterable.map(fn1));
         });
         it('maps an async function over an enumerable -> async-generator of values', async () => {
             const result = await coll.mapAsync(fn1Async, dataAsyncGenerator());
-            expect(result).toEqual(dataIterable.map(_fn1));
+            expect(result).toEqual(dataIterable.map(fn1));
         });
         it('maps an async function over an enumerable -> async-generator of Promises', async () => {
             const result = await coll.mapAsync(fn1Async, dataAsyncGeneratorOfPromises());
-            expect(result).toEqual(dataIterable.map(_fn1));
+            expect(result).toEqual(dataIterable.map(fn1));
         });
     });
 
     describe('filterAsync', () => {
         it('maps an async function over an enumerable -> object values', async () => {
             const result = await coll.filterAsync(predicateEvenAsync, dataObject);
-            expect(result).toEqual(dataIterable.filter(_predicateEven));
+            expect(result).toEqual(dataIterable.filter(predicateEven));
         });
         it('filters an async function over an enumerable -> iterable', async () => {
             const result = await coll.filterAsync(predicateEvenAsync, dataIterable);
-            expect(result).toEqual(dataIterable.filter(_predicateEven));
+            expect(result).toEqual(dataIterable.filter(predicateEven));
         });
         it('filters an async function over an enumerable -> iterator', async () => {
             const result = await coll.filterAsync(predicateEvenAsync, dataIterator());
-            expect(result).toEqual(dataIterable.filter(_predicateEven));
+            expect(result).toEqual(dataIterable.filter(predicateEven));
         });
         it('filters an async function over an enumerable -> generator', async () => {
             const result = await coll.filterAsync(predicateEvenAsync, dataGenerator());
-            expect(result).toEqual(dataIterable.filter(_predicateEven));
+            expect(result).toEqual(dataIterable.filter(predicateEven));
         });
         it('filters an async function over an enumerable -> async-generator of values', async () => {
             const result = await coll.filterAsync(predicateEvenAsync, dataAsyncGenerator());
-            expect(result).toEqual(dataIterable.filter(_predicateEven));
+            expect(result).toEqual(dataIterable.filter(predicateEven));
         });
         it('filters an async function over an enumerable -> async-generator of Promises', async () => {
             const result = await coll.filterAsync(predicateEvenAsync, dataAsyncGeneratorOfPromises());
-            expect(result).toEqual(dataIterable.filter(_predicateEven));
+            expect(result).toEqual(dataIterable.filter(predicateEven));
         });
         it('filters a predicate function over an enumerable -> async-generator of Promises', async () => {
             const result = await coll.filterAsync(predicateEven, dataAsyncGeneratorOfPromises());
-            expect(result).toEqual(dataIterable.filter(_predicateEven));
+            expect(result).toEqual(dataIterable.filter(predicateEven));
         });
     });
 
@@ -508,7 +504,7 @@ describe('async', () => {
     describe('composeAsync = step-function/sum = reducing-function/reduceAsync = pipeline-runner =~ transduce-async', () => {
         const expectedResult = 1321;
         const _sum = (a, b) => a + b;
-        const sum = coll.which(_sum);
+        const sum = _sum;
 
         it('transduce using composed async transducers * left * to right, over an enumerable -> object values', async () => {
             const transducerAsync = await coll.composeAsync(xform1Async, xform2Async, xform3Async);

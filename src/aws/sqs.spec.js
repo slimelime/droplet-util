@@ -226,5 +226,20 @@ describe('SQS', () => {
             expect(Body).toEqual(expectedMessageBody);
         });
 
+        it.skip('receives no messages if the queue does not contain any messages', async () => {
+
+            const {
+                Messages: [
+                    {
+                        MessageId,
+                        Body
+                    } = {}
+                ] = []
+            } = await sqs.receiveMessage(queueUrl);
+
+            expect(MessageId).toBeUndefined();
+            expect(Body).toBeUndefined();
+
+        });
     });
 });

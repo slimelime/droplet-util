@@ -106,3 +106,33 @@ describe('ensureEnvironmentVariables', () => {
         }
     });
 });
+
+describe('ensureObjectProperties', () => {
+    it('returns empty string', () => {
+        const OBJECT_TO_VALIDATE = {
+            YOU_NEED_ME_1: 'And I am here 1',
+            YOU_NEED_ME_2: 'And I am here 2',
+            YOU_NEED_ME_3: 'And I am here 3'
+        };
+
+        const REQUIRED_PROPERTIES = ['YOU_NEED_ME_1', 'YOU_NEED_ME_2', 'YOU_NEED_ME_3'];
+
+        const envVars = propertyValidator.ensureObjectProperties(OBJECT_TO_VALIDATE, REQUIRED_PROPERTIES);
+        expect(envVars).toEqual('');
+    });
+
+    it('throws an Error with a list of missing properties in the message', () => {
+        const OBJECT_TO_VALIDATE = {
+            YOU_NEED_ME_1: 'And I am here 1'
+        };
+
+        const REQUIRED_PROPERTIES = ['YOU_NEED_ME_1', 'YOU_NEED_ME_2', 'YOU_NEED_ME_3'];
+
+        expect.assertions(1);
+        try {
+            propertyValidator.ensureObjectProperties(OBJECT_TO_VALIDATE, REQUIRED_PROPERTIES);
+        } catch (err) {
+            expect(err.message).toEqual(expect.stringContaining('YOU_NEED_ME_2,YOU_NEED_ME_3'));
+        }
+    });
+});

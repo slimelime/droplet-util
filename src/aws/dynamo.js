@@ -87,7 +87,6 @@ async function exportTable(table, {bucket, file = `${datetimeProvider.getTimesta
     const complete$ = new Rx.Subject();
 
     const tableMetadata = await describeTable(table, options, params);
-    // logger.log(tableMetadata);
     const readCapacityUnits = jp.value(tableMetadata, 'Table.ProvisionedThroughput.ReadCapacityUnits');
     logger.log({readCapacityUnits});
     const generatorOfBatches = await docClient.scanBatches(table, {
@@ -97,10 +96,11 @@ async function exportTable(table, {bucket, file = `${datetimeProvider.getTimesta
     });
     // 'ProvisionedThroughput.WriteCapacityUnits'
     const throttlingParams = {
+        objectMode: true,
         rate: readCapacityUnits, interval: 'second', burst: readCapacityUnits, initialContent: readCapacityUnits,
         consumedCapacityUnits: ({ConsumedCapacity: {CapacityUnits}}) => CapacityUnits
     };
-    const scanReadableStream = readableStream.fromAsyncGeneratorOfBatches(throttlingParams, generatorOfBatches);
+    const scanReadableStream = readableStream.fromAsyncGeneratorOfBatches(generatorOfBatches, throttlingParams);
     let writeStream;
     const ldJSONStream = streams.objectTransformStream(
 // eslint-disable-next-line prefer-arrow-callback

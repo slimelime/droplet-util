@@ -28,7 +28,7 @@ class RedshiftClient {
     }
 
     async closeConnection(message = 'Closing connection!') {
-        logger.log(message);
+        // logger.log(message);
         return this.client.end();
     }
 

@@ -228,6 +228,7 @@ function lineStreamWithByteRange({skip = 0, take = -1, byteRangeStart = 0, encod
         if (that.counter === 0) {
             if (header && lines.length > 0) {
                 const headerLine = lines.shift();
+                that.header = headerLine;
                 that.push(trimDelimiter ? headerLine : headerLine + delimiter);
                 const lineSize = Buffer.from(headerLine, encoding).length;
                 that.lineRangeBuffer = {
@@ -240,6 +241,7 @@ function lineStreamWithByteRange({skip = 0, take = -1, byteRangeStart = 0, encod
                 that.byteRangeStart += lineSize + delimterSize;
                 that.counter++; // we increment after publishing in order to align published index with `processed` record counter, i.e. we wouldn't want to count the header as a record
             } else if (initHeader) {
+                that.header = initHeader;
                 that.push(trimDelimiter ? initHeader : initHeader + delimiter);
                 // external initial header was used, doesn't affect our counters
             }

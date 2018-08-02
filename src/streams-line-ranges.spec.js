@@ -96,7 +96,7 @@ describe('LineRanges', () => {
             // const lineNumber = Math.floor((Math.random() * ((lineNumberRangeEnd / gapSize) - 1)) + 1) * gapSize;
             const lineNumber = _.random(1, lineNumberRangeEnd);
             const lineRange = lineRanges.start(lineNumber);
-            logger.log(lineNumber, lineRange);
+            // logger.log(lineNumber, lineRange);
             expect(lineRange.lineNumber).toBeLessThanOrEqual(lineNumber);
             expect(lineRange.byteRangeStart).toBeLessThanOrEqual((lineNumber - 1) * (lineSize));
             expect(lineRange.byteRangeEnd).toBeLessThanOrEqual(((lineNumber - 1) * (lineSize)) + lineSize);

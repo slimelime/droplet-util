@@ -1,21 +1,33 @@
 {
-  "presets": [
-    ["env", {
-      "targets": {
-        "node": "6.10"
-      },
-      "debug": true
-    }]
-  ],
-  "plugins": [
-    "transform-object-rest-spread",
-    ["transform-runtime", {
-      "polyfill": true,
-      "regenerator": true
-    }],
-    ["transform-builtin-extend", {
-      "globals": ["Error"]
-    }],
-    "transform-async-generator-functions"
-  ]
+    "presets": [
+        [
+            "env",
+            {
+                "targets": {
+                    "node": "8.10"
+                },
+                "debug": true
+            }
+        ],
+        ["es2017"]
+    ],
+    "plugins": [
+        "transform-object-rest-spread",
+        [
+            "transform-runtime",
+            {
+                "polyfill": true,
+                "regenerator": true
+            }
+        ],
+        [
+            "transform-builtin-extend",
+            {
+                "globals": [
+                    "Error"
+                ]
+            }
+        ],
+        "transform-async-generator-functions"
+    ]
 }

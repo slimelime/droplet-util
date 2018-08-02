@@ -1,7 +1,6 @@
 'use strict';
 
-const AWSXRay = require('aws-xray-sdk-core');
-const AWS = process.env['ENABLE_AWS_X_RAY'] ? AWSXRay.captureAWS(require('aws-sdk')) : require('aws-sdk');
+const AWS = require('aws-sdk');
 const MemoryStream = require('memorystream');
 
 const collections = require('../collections');
@@ -10,8 +9,69 @@ const errors = require('../errors');
 const {UnretryableError} = errors;
 
 const commonDefaultOptions = { signatureVersion: 'v4' };
-
 const regionDefaultOptions = () => ({region: process.env.AWS_DEFAULT_REGION});
+
+async function bucketExist(bucket, options = {}, params = {}) {
+    const s3 = new AWS.S3({...commonDefaultOptions, ...regionDefaultOptions(), ...options});
+    const requiredParams = {
+        Bucket: bucket
+    };
+
+    try {
+        await s3.headBucket({...requiredParams, ...params}).promise();
+        return true;
+    } catch (ex) {
+        if (ex.code === 'NotFound') {
+            return false;
+        } else {
+            throw ex;
+        }
+    }
+}
+
+async function copyObject(bucket, key, copySource, options = {}, params = {}) {
+    const s3 = new AWS.S3({...commonDefaultOptions, ...regionDefaultOptions(), ...options});
+    const requiredParams = {
+        Bucket: bucket,
+        Key: key,
+        CopySource: copySource
+    };
+    return s3.copyObject({...requiredParams, ...params}).promise();
+}
+
+async function countLines(bucket, key, delimiter = '\n', options = {}, params = {}) {
+    let count = 0;
+    return new Promise((resolve, reject) => {
+        getObjectReadStream(bucket, key, options, params)
+            .on('error', err => {
+                const error = new UnretryableError(err.message, errors.codes.Groups.S3, err.code);
+                reject(error);
+            })
+            .pipe(streams.lineStream({delimiter}))
+            .on('data', () => count++)
+            .on('finish', () => {
+                resolve(count);
+            });
+    });
+}
+
+async function createBucket(bucket, options = {}, params = {}) {
+    const s3 = new AWS.S3({...commonDefaultOptions, ...regionDefaultOptions(), ...options});
+    const requiredParams = {
+        Bucket: bucket
+    };
+
+    return s3.createBucket({...requiredParams, ...params}).promise();
+}
+
+async function deleteObject(bucket, key, options = {}, params = {}) {
+    const s3 = new AWS.S3({...commonDefaultOptions, ...regionDefaultOptions(), ...options});
+    const requiredParams = {
+        Bucket: bucket,
+        Key: key
+    };
+    return s3.deleteObject({...requiredParams, ...params}).promise();
+}
 
 async function getBucketLocation(bucket, options = {}, params = {}) {
     const s3 = new AWS.S3({...commonDefaultOptions, ...regionDefaultOptions(), ...options});
@@ -19,6 +79,23 @@ async function getBucketLocation(bucket, options = {}, params = {}) {
         Bucket: bucket
     };
     return s3.getBucketLocation({...requiredParams, ...params}).promise();
+}
+
+async function getBucketPolicy(bucket, options = {}, params = {}) {
+    const s3 = new AWS.S3({...commonDefaultOptions, ...regionDefaultOptions(), ...options});
+    const requiredParams = {
+        Bucket: bucket
+    };
+
+    try {
+        return await s3.getBucketPolicy({...requiredParams, ...params}).promise();
+    } catch (err) {
+        if (err.code === 'NoSuchBucketPolicy') {
+            return {Policy: '{}'};
+        } else {
+            throw err;
+        }
+    }
 }
 
 async function getObject(bucket, key, options = {}, params = {}) {
@@ -39,54 +116,15 @@ function getObjectReadStream(bucket, key, options = {}, params = {}) {
     return s3.getObject({...requiredParams, ...params}).createReadStream();
 }
 
-async function copyObject(bucket, key, copySource, options = {}, params = {}) {
-    const s3 = new AWS.S3({...commonDefaultOptions, ...regionDefaultOptions(), ...options});
-    const requiredParams = {
-        Bucket: bucket,
-        Key: key,
-        CopySource: copySource
-    };
-    return s3.copyObject({...requiredParams, ...params}).promise();
-}
-
-async function deleteObject(bucket, key, options = {}, params = {}) {
-    const s3 = new AWS.S3({...commonDefaultOptions, ...regionDefaultOptions(), ...options});
-    const requiredParams = {
-        Bucket: bucket,
-        Key: key
-    };
-    return s3.deleteObject({...requiredParams, ...params}).promise();
-}
-
-async function moveObject(fromBucket, fromKey, toBucket, toKey = fromKey, options = {}) {
-    await copyObject(toBucket, toKey, `${fromBucket}/${fromKey}`, options, {ServerSideEncryption: 'AES256'});
-    await deleteObject(fromBucket, fromKey, options);
-    return {fromBucket, fromKey, toBucket, toKey};
-}
-
-async function objectExists(bucket, key, options = {}, params = {}) {
-    const s3 = new AWS.S3({...commonDefaultOptions, ...regionDefaultOptions(), ...options});
-    const requiredParams = {
-        Bucket: bucket,
-        Key: key
-    };
-    try {
-        await s3.headObject({...requiredParams, ...params}).promise();
-        return true;
-    } catch (ex) {
-        return false;
-    }
-}
-
-async function upload(bucket, key, body, SSE = 'AES256', options = {}, params = {}) {
-    const s3 = new AWS.S3({...commonDefaultOptions, ...regionDefaultOptions(), ...options});
-    const requiredParams = {
-        Bucket: bucket,
-        Key: key,
-        Body: body,
-        ServerSideEncryption: SSE
-    };
-    return s3.upload({...requiredParams, ...params}).promise();
+function lineStream(bucket, key, skip = 0, take = -1, delimiter = '\n', options = {}, params = {}) {
+    return getObjectReadStream(bucket, key, options, params)
+        .on('error', function (err) {
+            const error = new UnretryableError(err.message, errors.codes.Groups.S3, err.code);
+            this.emit('error', err);
+            this.emit('end'); // Tells up-stream streams that we have ended, doesn't actually `close`/`destroy` the stream
+            this.end(); // Won't trigger the `end` event, cleanup not necessary in our transform case, added for the sake of completeness
+        })
+        .pipe(streams.lineStream({skip, take, delimiter}));
 }
 
 async function listObjects(bucket, prefix, limit, options = {}, params = {}) {
@@ -101,6 +139,10 @@ async function listObjects(bucket, prefix, limit, options = {}, params = {}) {
         requiredParams.MaxKeys = limit;
     }
     return s3.listObjectsV2({...requiredParams, ...params}).promise();
+}
+
+async function listObjectsAll(bucket, prefix, {limit}, options = {}, params = {}) {
+    return collections.reduceAsync(collections.append(/*reducingFn*/), () => [], listObjectsSequence(bucket, prefix, {limit}, options, params));
 }
 
 async function* listObjectsBatches(bucket, prefix, {limit, flatten = false} = {}, options = {}, params = {}) {
@@ -130,8 +172,50 @@ async function* listObjectsSequence(bucket, prefix, {limit}, options = {}, param
     return yield* listObjectsBatches(bucket, prefix, {limit, flatten: true}, options, params);
 }
 
-async function listObjectsAll(bucket, prefix, {limit}, options = {}, params = {}) {
-    return collections.reduceAsync(collections.append(/*reducingFn*/), () => [], listObjectsSequence(bucket, prefix, {limit}, options, params));
+async function moveObject(fromBucket, fromKey, toBucket, toKey = fromKey, options = {}) {
+    await copyObject(toBucket, toKey, `${fromBucket}/${fromKey}`, options, {ServerSideEncryption: 'AES256'});
+    await deleteObject(fromBucket, fromKey, options);
+    return {fromBucket, fromKey, toBucket, toKey};
+}
+
+async function objectExists(bucket, key, options = {}, params = {}) {
+    const s3 = new AWS.S3({...commonDefaultOptions, ...regionDefaultOptions(), ...options});
+    const requiredParams = {
+        Bucket: bucket,
+        Key: key
+    };
+    try {
+        await s3.headObject({...requiredParams, ...params}).promise();
+        return true;
+    } catch (ex) {
+        return false;
+    }
+}
+
+async function putBucketEncryption(bucket, options = {}, params = {}) {
+    const s3 = new AWS.S3({...commonDefaultOptions, ...regionDefaultOptions(), ...options});
+    const requiredParams = {
+        Bucket: bucket,
+        ServerSideEncryptionConfiguration: {
+            Rules: [
+                {
+                    ApplyServerSideEncryptionByDefault: {
+                        SSEAlgorithm: 'AES256'
+                    }
+                }
+            ]
+        }
+    };
+    return s3.putBucketEncryption({...requiredParams, ...params}).promise();
+}
+
+async function putBucketPolicy(bucket, policy, options = {}, params = {}) {
+    const s3 = new AWS.S3({...commonDefaultOptions, ...regionDefaultOptions(), ...options});
+    const requiredParams = {
+        Bucket: bucket,
+        Policy: policy
+    };
+    return s3.putBucketPolicy({...requiredParams, ...params}).promise();
 }
 
 async function readHeaderLine(bucket, key, delimiter = '\n', quote = true, options = {}, params = {}) {
@@ -178,48 +262,58 @@ async function readLines(bucket, key, skip = 0, take = -1, delimiter = '\n', opt
     });
 }
 
-function lineStream(bucket, key, skip = 0, take = -1, delimiter = '\n', options = {}, params = {}) {
-    return getObjectReadStream(bucket, key, options, params)
-        .on('error', function (err) {
-            const error = new UnretryableError(err.message, errors.codes.Groups.S3, err.code);
-            this.emit('error', err);
-            this.emit('end'); // Tells up-stream streams that we have ended, doesn't actually `close`/`destroy` the stream
-            this.end(); // Won't trigger the `end` event, cleanup not necessary in our transform case, added for the sake of completeness
-        })
-        .pipe(streams.lineStream({skip, take, delimiter}));
+async function upload(bucket, key, body, options = {}, params = {}) {
+    const s3 = new AWS.S3({...commonDefaultOptions, ...regionDefaultOptions(), ...options});
+    const requiredParams = {
+        Bucket: bucket,
+        Key: key,
+        Body: body,
+        // @TODO: SSE was being passed as a positional arg - moved it into params as expected - see eg. moveObject. Still setting default of 'AES256' in required params through.
+        ServerSideEncryption: 'AES256'
+    };
+    return s3.upload({...requiredParams, ...params}).promise();
 }
 
-async function countLines(bucket, key, delimiter = '\n', options = {}, params = {}) {
-    let count = 0;
-    return new Promise((resolve, reject) => {
-        getObjectReadStream(bucket, key, options, params)
-            .on('error', err => {
-                const error = new UnretryableError(err.message, errors.codes.Groups.S3, err.code);
-                reject(error);
-            })
-            .pipe(streams.lineStream({delimiter}))
-            .on('data', () => count++)
-            .on('finish', () => {
-                resolve(count);
-            });
-    });
+async function getBucketNotificationConfiguration(bucket, options = {}) {
+    const s3 = new AWS.S3({...commonDefaultOptions, ...regionDefaultOptions(), ...options});
+    const requiredParams = {
+        Bucket: bucket
+    };
+    return s3.getBucketNotificationConfiguration(requiredParams).promise();
+}
+
+async function putBucketNotificationConfiguration(bucket, notificationConfiguration, options = {}) {
+    const s3 = new AWS.S3({...commonDefaultOptions, ...regionDefaultOptions(), ...options});
+    const requiredParams = {
+        Bucket: bucket,
+        NotificationConfiguration: notificationConfiguration
+    };
+
+    return s3.putBucketNotificationConfiguration(requiredParams).promise();
 }
 
 module.exports = {
+    bucketExist,
+    copyObject,
+    countLines,
+    createBucket,
+    deleteObject,
     getBucketLocation,
+    getBucketPolicy,
     getObject,
     getObjectReadStream,
-    copyObject,
-    deleteObject,
-    moveObject,
-    objectExists,
-    upload,
+    lineStream,
     listObjects,
+    listObjectsAll,
     listObjectsBatches,
     listObjectsSequence,
-    listObjectsAll,
+    moveObject,
+    objectExists,
+    putBucketEncryption,
+    putBucketPolicy,
     readHeaderLine,
-    countLines,
     readLines,
-    lineStream
+    upload,
+    getBucketNotificationConfiguration,
+    putBucketNotificationConfiguration
 };

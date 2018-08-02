@@ -1,12 +1,13 @@
 'use strict';
 
-const AWSXRay = require('aws-xray-sdk-core');
-const AWS = process.env['ENABLE_AWS_X_RAY'] ? AWSXRay.captureAWS(require('aws-sdk')) : require('aws-sdk');
+const AWS = require('aws-sdk');
 const _ = require('lodash');
 
 const collections = require('../collections');
 
-const commonDefaultOptions = {};
+const commonDefaultOptions = {
+    convertEmptyValues: true
+};
 
 const regionDefaultOptions = () => ({region: process.env.AWS_DEFAULT_REGION});
 
@@ -19,6 +20,7 @@ async function get(table, keyMap, options = {}, params = {}) {
     return docClient.get({...requiredParams, ...params}).promise();
 }
 
+// @TODO: should deleteItem be renamed to 'delete'
 async function deleteItem(table, keyMap, options = {}, params = {}) {
     const docClient = new AWS.DynamoDB.DocumentClient({...commonDefaultOptions, ...regionDefaultOptions(), ...options});
     const requiredParams = {
@@ -245,6 +247,7 @@ async function batchWrite(table, {Put = [], Delete = [], Keys = []} = {}, option
     const deleteRequests = collections.map(item => ({DeleteRequest: {Key: _.pick(item, Keys)}}), Delete);
     const putRequests = collections.map(item => ({PutRequest: {Item: item}}), Put);
 
+    // TODO: Is batch size limited to 25 total, or 25 puts and 25 deletes.
     const max = 25; //batchWrite allows batch size between 1 - 25 only
     let start = 0;
     let deleteChunk = deleteRequests.slice(start, start + max);
@@ -253,7 +256,7 @@ async function batchWrite(table, {Put = [], Delete = [], Keys = []} = {}, option
 
     while (putChunk.length || deleteChunk.length) {
         const requiredParams = {
-            RequestItems: { [table]: [...deleteRequests, ...putRequests]},
+            RequestItems: { [table]: [...deleteChunk, ...putChunk]},
             ReturnConsumedCapacity: 'TOTAL'
         };
         const chunkResults = await docClient.batchWrite({...requiredParams, ...params}).promise();
