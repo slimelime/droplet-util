@@ -1,5 +1,3 @@
-const LOGGER = require('./lib/logger');
-
 module.exports = {
-    LOGGER
+    logger: require('./lib/logger')
 };
