@@ -11,9 +11,7 @@
         "test": "jest ./src --verbose",
         "build": "babel --copy-files --out-dir lib --ignore *.spec.js,__mocks__ src",
         "build-dev": "yarn --dev; npm run build",
-        "build-prod": "yarn --prod; npm run build",
-        "clean-build-dev": "npm run clean; npm run build-dev",
-        "clean-build-prod": "npm run clean; npm run build-prod"
+        "clean-build-dev": "npm run clean; npm run build-dev"
     },
     "repository": {
         "type": "git",

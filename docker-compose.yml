@@ -1,0 +1,27 @@
+base:
+    build: .
+    volumes:
+        - .:/opt/code
+
+base-env:
+    extends: base
+    env_file: .env
+    environment:
+        - AWS_DEFAULT_REGION=ap-southeast-2
+        - AWS_REGION=ap-southeast-2
+
+decrypt-token:
+    extends: base-env
+    command: bash -c -e "
+        npm install aws-sdk --no-save;
+        node ./src/decrypt-kms-token.js > decrypted_token"
+
+build-dev:
+    extends: base
+    command: bash -c -e "
+        yarn install --dev;
+        npm run build"
+
+jest:
+    extends: base
+    command: jest

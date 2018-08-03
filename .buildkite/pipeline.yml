@@ -1,0 +1,23 @@
+steps:
+  - command: |-
+      touch .env
+      echo "ENCRYPTED_KEY=AQICAHiYxRwSTF9mq4am765WB996sS3kh2C9RnoRh7Lj0Oe50AF58y7j52tT8VKAj43sKHe4AAAAizCBiAYJKoZIhvcNAQcGoHsweQIBADB0BgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDD5X3swLBDMRIi49jAIBEIBHuYl/gGezqU9rjGqc137c/OIsIQ30cRTsPJPL7xxvCga1jdJ8hnFYVcFdcsNQODxViQquPJdr8HGTbeyru+Q2fF0RO8FoFJE=" > .env
+      echo --- Build docker images
+      docker-compose build decrypt-token
+      docker-compose build build-dev
+      docker-compose build jest
+
+      echo --- Run decrypt-token
+      docker-compose run decrypt-token
+      echo "@myob:registry=https://npm.addevcloudservices.com.au/" > .npmrc
+      echo "//npm.addevcloudservices.com.au/:_authToken=`cat decrypted_token`" >> .npmrc
+
+      #Test
+      echo --- Run build-dev
+      docker-compose run build-dev
+      echo --- Run jest
+      docker-compose run jest
+
+    label: 'Test JS :nodejs: :jest:'
+    agents:
+      - queue=datami-sit-dflt
