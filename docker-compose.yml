@@ -25,3 +25,7 @@ build-dev:
 jest:
     extends: base
     command: jest
+
+eslint:
+    extends: base
+    command: npm run eslint

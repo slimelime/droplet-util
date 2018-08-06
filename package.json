@@ -8,10 +8,13 @@
     },
     "scripts": {
         "clean": "rm -rf node_modules; rm -rf ./lib; rm -rf ./dist",
-        "test": "jest ./src --verbose",
-        "build": "babel --copy-files --out-dir lib --ignore *.spec.js,__mocks__ src",
+        "test": "./node_modules/jest-cli/bin/jest.js ./src --verbose",
+        "eslint": "./node_modules/.bin/eslint src --quiet",
+        "build": "./node_modules/babel-cli/bin/babel.js --copy-files --out-dir lib --ignore *.spec.js,__mocks__ src",
         "build-dev": "yarn --dev; npm run build",
-        "clean-build-dev": "npm run clean; npm run build-dev"
+        "clean-build-dev": "npm run clean; npm run build-dev",
+        "build-prod": "yarn --prod; npm run build",
+        "clean-build-prod": "npm run clean; npm run build-prod"
     },
     "repository": {
         "type": "git",
@@ -24,15 +27,20 @@
     },
     "homepage": "https://github.com/MYOB-Technology/droplet-util#readme",
     "dependencies": {
-        "@myob/droplet-slo": "^3.0.1",
         "@myob/inbound-idam-auth": "^3.0.1",
-        "adm-zip": "^0.4.7",
         "ajv": "^5.5.2",
         "argparse": "^1.0.9",
         "aws-sdk": "^2.258.1",
         "aws-xray-sdk-core": "^1.2.0",
         "babel-plugin-transform-builtin-extend": "^1.1.2",
         "babel-runtime": "^6.26.0",
+        "babel-cli": "^6.26.0",
+        "babel-eslint": "^8.2.3",
+        "babel-plugin-transform-async-generator-functions": "^6.24.1",
+        "babel-plugin-transform-object-rest-spread": "^6.26.0",
+        "babel-plugin-transform-runtime": "^6.23.0",
+        "babel-preset-env": "^1.7.0",
+        "babel-preset-es2017": "^6.24.1",
         "csv-parse": "^1.2.0",
         "dynamo-update-expression": "^1.0.8",
         "fs-extra": "^4.0.2",
@@ -57,13 +65,6 @@
         "uuid": "^3.0.1"
     },
     "devDependencies": {
-        "babel-cli": "^6.26.0",
-        "babel-eslint": "^8.2.3",
-        "babel-plugin-transform-async-generator-functions": "^6.24.1",
-        "babel-plugin-transform-object-rest-spread": "^6.26.0",
-        "babel-plugin-transform-runtime": "^6.23.0",
-        "babel-preset-env": "^1.7.0",
-        "babel-preset-es2017": "^6.24.1",
         "eslint": "~3.18.0",
         "jest-cli": "19.0.2",
         "nock": "^9.2.5",

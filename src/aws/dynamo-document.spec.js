@@ -183,13 +183,13 @@ describe('util/aws/dynamo-document', () => {
         it('respects strict item limitation', async () => {
             queryPromiseFn.mockReset();
             queryPromiseFn.mockReturnValueOnce(Promise.resolve({
-                    Items: [expectedItems[1]],
-                    LastEvaluatedKey
-                }))
-                .mockReturnValueOnce(Promise.resolve({
-                    // Require extra items returned in the second batch past the strict limit
-                    Items: [expectedItems[0], {PrimaryKey: 'dropped'}, {PrimaryKey: 'dropped'}]
-                }));
+                Items: [expectedItems[1]],
+                LastEvaluatedKey
+            }))
+            .mockReturnValueOnce(Promise.resolve({
+                // Require extra items returned in the second batch past the strict limit
+                Items: [expectedItems[0], {PrimaryKey: 'dropped'}, {PrimaryKey: 'dropped'}]
+            }));
             queryFn.mockClear();
 
             const items = await docClient.queryAll(table, {
@@ -265,12 +265,12 @@ describe('util/aws/dynamo-document', () => {
         it('respects strict item limitation', async () => {
             scanPromiseFn.mockClear();
             scanPromiseFn.mockReturnValueOnce(Promise.resolve({
-                    Items: [expectedItems[0]],
-                    LastEvaluatedKey
-                }))
-                .mockReturnValueOnce(Promise.resolve({
-                    Items: [expectedItems[1], {PrimaryKey: 'dropped'}, {PrimaryKey: 'dropped'}]
-                }));
+                Items: [expectedItems[0]],
+                LastEvaluatedKey
+            }))
+            .mockReturnValueOnce(Promise.resolve({
+                Items: [expectedItems[1], {PrimaryKey: 'dropped'}, {PrimaryKey: 'dropped'}]
+            }));
 
             const items = await docClient.scanAll(table, {
                 filterExpression,
