@@ -11,12 +11,11 @@ module.exports = {
         sns: require('./lib/aws/sns'),
         sqs: require('./lib/aws/sqs'),
         stepFunctions: require('./lib/aws/step-functions'),
-        sts: require('./lib/aws/sts'),
+        sts: require('./lib/aws/sts')
     },
     collections: require('./lib/collections'),
     configManager: require('./lib/config-manager'),
     datetimeProvider: require('./lib/datetime-provider'),
-    decryptKmsToken: require('./lib/decrypt-kms-token'),
     errorCodes: require('./lib/error-codes'),
     errors: require('./lib/errors'),
     idamTokenValidator: require('./lib/idam-token-validator'),
