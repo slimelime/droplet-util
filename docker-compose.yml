@@ -29,3 +29,7 @@ jest:
 eslint:
     extends: base
     command: npm run eslint
+
+build-publish:
+    extends: base
+    command: npm run build-publish
