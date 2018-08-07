@@ -1,6 +1,6 @@
 {
     "name": "@myob/droplet-util",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "Utilities for Droplet",
     "main": "index.js",
     "engines": {
@@ -16,6 +16,9 @@
         "build-prod": "yarn --prod; npm run build",
         "clean-build-prod": "npm run clean; npm run build-prod"
     },
+    "files": [
+        "lib"
+    ],
     "repository": {
         "type": "git",
         "url": "git+https://github.com/MYOB-Technology/droplet-util.git"
