@@ -23,8 +23,12 @@ steps:
       docker-compose run jest
 
       #Publish new version
-      #echo -- Publish new version
+      echo -- Publish new version
       #docker-compose run build-publish
+      npm run build
+      npm version patch
+      npm publish
+      git push --tags origin master
 
     label: 'Test JS :nodejs: :jest:'
     agents:
