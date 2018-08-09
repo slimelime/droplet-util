@@ -7,7 +7,6 @@ steps:
       docker-compose build build-dev
       docker-compose build eslint
       docker-compose build jest
-      docker-compose build build-publish
 
       echo --- Run decrypt-token
       docker-compose run decrypt-token
