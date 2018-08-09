@@ -45,6 +45,7 @@ steps:
       docker-compose run build-dev
       echo --- Run release
       docker-compose run release
+      git push --tags origin master
 
     label: 'Publish'
     agents:

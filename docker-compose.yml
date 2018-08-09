@@ -33,7 +33,3 @@ eslint:
 release:
     extends: base
     command: npm run release
-
-def:
-    extends: base
-    command: npm run def
