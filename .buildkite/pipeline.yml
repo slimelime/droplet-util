@@ -32,6 +32,7 @@ steps:
       echo "ENCRYPTED_KEY=AQICAHiYxRwSTF9mq4am765WB996sS3kh2C9RnoRh7Lj0Oe50AF58y7j52tT8VKAj43sKHe4AAAAizCBiAYJKoZIhvcNAQcGoHsweQIBADB0BgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDD5X3swLBDMRIi49jAIBEIBHuYl/gGezqU9rjGqc137c/OIsIQ30cRTsPJPL7xxvCga1jdJ8hnFYVcFdcsNQODxViQquPJdr8HGTbeyru+Q2fF0RO8FoFJE=" > .env
       echo --- Build docker images
       docker-compose build decrypt-token
+      docker-compose build build-dev
       docker-compose build release
 
       echo --- Run decrypt-token
@@ -40,9 +41,10 @@ steps:
       echo "//npm.addevcloudservices.com.au/:_authToken=`cat decrypted_token`" >> .npmrc
 
       #Publish
+      echo --- Run build-dev
+      docker-compose run build-dev
       echo --- Run release
       docker-compose run release
-      git push --tags origin master
 
     label: 'Publish'
     agents:
