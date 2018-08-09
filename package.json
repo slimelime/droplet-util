@@ -1,6 +1,6 @@
 {
     "name": "@myob/droplet-util",
-    "version": "1.0.17",
+    "version": "1.0.18",
     "description": "Utilities for Droplet",
     "main": "index.js",
     "engines": {
