@@ -48,7 +48,7 @@ steps:
       git config user.name "Suppachart Tantisureeporn"
       docker-compose run release
       git pull origin master
-      git push --tags origin master
+      git push --tags origin master -f
 
     label: 'Publish'
     agents:
