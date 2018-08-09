@@ -30,6 +30,6 @@ eslint:
     extends: base
     command: npm run eslint
 
-git-push:
+release:
     extends: base
-    command: npm run git-push
+    command: npm run release
