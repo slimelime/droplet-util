@@ -45,10 +45,6 @@ steps:
       docker-compose run build-dev
       echo --- Run release
       docker-compose run release
-      git config user.email "suppachart.tantisureeporn@myob.com"
-      git config user.name "Suppachart Tantisureeporn"
-      git pull origin master
-      git push --tags origin master
 
     label: 'Publish'
     agents:

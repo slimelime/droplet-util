@@ -32,4 +32,8 @@ eslint:
 
 release:
     extends: base
-    command: npm run release
+    command: bash -c -e "
+        npm run release;
+        git config user.email "suppachart.tantisureeporn@myob.com";
+        git config user.name "Suppachart Tantisureeporn";
+        git push --tags origin master"
