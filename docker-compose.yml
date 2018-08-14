@@ -37,3 +37,7 @@ release:
         git config user.name "Suppachart Tantisureeporn";
         npm run release;
         git push --tags origin master"
+
+abcd:
+    extends: base
+    command: bash -c -e "git push"
