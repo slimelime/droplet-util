@@ -50,6 +50,7 @@ steps:
       git pull origin master --rebase
       git --no-pager log -n 10
       git push --tags -f origin master
+      git push -f origin master
 
     label: 'Publish'
     agents:
