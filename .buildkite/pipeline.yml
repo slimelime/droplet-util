@@ -46,8 +46,8 @@ steps:
       echo --- Run release
       git config user.email "suppachart.tantisureeporn@myob.com"
       git config user.name "Suppachart Tantisureeporn"
+      git pull origin master
       docker-compose run release
-      cat ./package.json
       git push --tags origin master
 
     label: 'Publish'
