@@ -49,8 +49,8 @@ steps:
       docker-compose run release
       git pull origin master --rebase
       git --no-pager log -n 10
-      git push --tags -f origin master
-      git push -f origin master
+      git push --tags origin
+      git push
 
     label: 'Publish'
     agents:
