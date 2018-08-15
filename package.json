@@ -15,7 +15,7 @@
         "clean-build-dev": "npm run clean; npm run build-dev",
         "build-prod": "yarn --prod; npm run build",
         "clean-build-prod": "npm run clean; npm run build-prod",
-        "release": "npm run build; npm version patch; npm publish; git push --tags origin"
+        "release": "npm run build; npm version patch; npm publish; git push"
     },
     "files": [
         "lib"
