@@ -47,8 +47,8 @@ steps:
       git config user.email "suppachart.tantisureeporn@myob.com"
       git config user.name "Suppachart Tantisureeporn"
       docker-compose run release
-      git pull origin master --rebase
-      git push --tags origin master
+      git --no-pager log -n 10
+      git push --tags -f origin master
 
     label: 'Publish'
     agents:
