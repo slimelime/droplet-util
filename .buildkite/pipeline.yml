@@ -46,8 +46,8 @@ steps:
       echo --- Run release
       git config user.email "suppachart.tantisureeporn@myob.com"
       git config user.name "Suppachart Tantisureeporn"
+      git checkout master
       docker-compose run release
-      git pull origin master --rebase
       git --no-pager log -n 10
       git push --tags origin
       git push
