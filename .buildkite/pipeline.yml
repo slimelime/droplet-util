@@ -47,6 +47,7 @@ steps:
       git config user.email "suppachart.tantisureeporn@myob.com"
       git config user.name "Suppachart Tantisureeporn"
       git checkout master
+      git pull
       docker-compose run release
       git --no-pager log -n 10
       git push --tags origin
