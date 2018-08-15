@@ -29,7 +29,3 @@ jest:
 eslint:
     extends: base
     command: npm run eslint
-
-release:
-    extends: base
-    command: npm run release
