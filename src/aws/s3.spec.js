@@ -791,7 +791,7 @@ describe('putBucketVersioning', () => {
     const VersioningConfiguration = {
         MFADelete: "Enabled",
         Status: "Enabled"
-    }
+    };
 
     describe('creating new S3 instance constructor', () => {
         const regionDefaultOption = 'MOCK_DEFAULT_REGION';
