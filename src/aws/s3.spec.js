@@ -34,6 +34,8 @@ const putBucketEncryptionPromiseFn = jest.fn();
 const putBucketEncryptionFn = jest.fn(() => ({ promise: putBucketEncryptionPromiseFn }));
 const putBucketPolicyPromiseFn = jest.fn();
 const putBucketPolicyFn = jest.fn(() => ({ promise: putBucketPolicyPromiseFn }));
+const putBucketVersioningPromiseFn = jest.fn();
+const putBucketVersioningFn = jest.fn(() => ({ promise: putBucketVersioningPromiseFn }));
 const uploadPromiseFn = jest.fn();
 const uploadFn = jest.fn(() => ({promise: uploadPromiseFn}));
 const getBucketNotificationConfigurationPromiseFn = jest.fn();
@@ -52,6 +54,7 @@ AWS.S3 = jest.fn(() => ({
     headBucket: headBucketFn,
     putBucketEncryption: putBucketEncryptionFn,
     putBucketPolicy: putBucketPolicyFn,
+    putBucketVersioning: putBucketVersioningFn,
     upload: uploadFn,
     getBucketNotificationConfiguration: getBucketNotificationConfigurationFn,
     putBucketNotificationConfiguration: putBucketNotificationConfigurationFn
@@ -79,6 +82,8 @@ const clearMocks = () => {
     putBucketEncryptionFn.mockClear();
     putBucketPolicyPromiseFn.mockClear();
     putBucketPolicyFn.mockClear();
+    putBucketVersioningPromiseFn.mockClear();
+    putBucketVersioningFn.mockClear();
     uploadPromiseFn.mockClear();
     uploadFn.mockClear();
     getBucketNotificationConfigurationPromiseFn.mockClear();
@@ -775,6 +780,72 @@ describe('putBucketPolicy', () => {
             const userDefinedParams = {Bucket: 'ANOTHER_MOCK_BUCKET', Policy: 'abc', CUSTOM_KEY: 'CUSTOM_VALUE'};
             await s3.putBucketPolicy(Bucket, Policy, {}, userDefinedParams);
             expect(putBucketPolicyFn).toBeCalledWith(userDefinedParams);
+        });
+    });
+});
+
+describe('putBucketVersioning', () => {
+    const Bucket = 'mock-bucket';
+    const mfaDeleteEnabled = true;
+    const versioningEnabled = true;
+    const VersioningConfiguration = {
+        MFADelete: "Enabled",
+        Status: "Enabled"
+    }
+
+    describe('creating new S3 instance constructor', () => {
+        const regionDefaultOption = 'MOCK_DEFAULT_REGION';
+        const AWS_DEFAULT_REGION = process.env.AWS_DEFAULT_REGION;
+
+        beforeEach(() => {
+            clearMocks();
+            process.env.AWS_DEFAULT_REGION = regionDefaultOption;
+        });
+
+        afterEach(() => {
+            process.env.AWS_DEFAULT_REGION = AWS_DEFAULT_REGION;
+        });
+
+        it('passes default options', async () => {
+            await s3.putBucketVersioning(Bucket, mfaDeleteEnabled, versioningEnabled);
+            expect(AWS.S3).toBeCalledWith(expect.objectContaining({region: regionDefaultOption}));
+        });
+
+        it('passes user defined options', async () => {
+            const userDefinedOptions = {CUSTOM_KEY: 'CUSTOM_VALUE'};
+
+            await s3.putBucketVersioning(Bucket, mfaDeleteEnabled, versioningEnabled, userDefinedOptions);
+            expect(AWS.S3).toBeCalledWith(expect.objectContaining({region: regionDefaultOption, ...userDefinedOptions}));
+        });
+
+        it('favours user defined options', async () => {
+            const userDefinedOptions = {region: 'CUSTOM_VALUE', CUSTOM_KEY: 'CUSTOM_VALUE'};
+
+            await s3.putBucketVersioning(Bucket, mfaDeleteEnabled, versioningEnabled, userDefinedOptions);
+            expect(AWS.S3).toBeCalledWith(expect.objectContaining(userDefinedOptions));
+        });
+    });
+
+    describe('calling AWS.S3().putBucketVersioning with expected params', () => {
+        beforeEach(() => {
+            clearMocks();
+        });
+
+        it('passes required params', async () => {
+            await s3.putBucketVersioning(Bucket, mfaDeleteEnabled, versioningEnabled);
+            expect(putBucketVersioningFn).toBeCalledWith({Bucket, VersioningConfiguration});
+        });
+
+        it('passes user defined params', async () => {
+            const userDefinedParams = {CUSTOM_KEY: 'CUSTOM_VALUE'};
+            await s3.putBucketVersioning(Bucket, mfaDeleteEnabled, versioningEnabled, {}, userDefinedParams);
+            expect(putBucketVersioningFn).toBeCalledWith({Bucket, VersioningConfiguration, ...userDefinedParams});
+        });
+
+        it('favours user defined params', async () => {
+            const userDefinedParams = {Bucket: 'ANOTHER_MOCK_BUCKET', VersioningConfiguration: {}, CUSTOM_KEY: 'CUSTOM_VALUE'};
+            await s3.putBucketVersioning(Bucket, mfaDeleteEnabled, versioningEnabled, {}, userDefinedParams);
+            expect(putBucketVersioningFn).toBeCalledWith(userDefinedParams);
         });
     });
 });

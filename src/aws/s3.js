@@ -218,6 +218,21 @@ async function putBucketPolicy(bucket, policy, options = {}, params = {}) {
     return s3.putBucketPolicy({...requiredParams, ...params}).promise();
 }
 
+async function putBucketVersioning(bucket, mfaDeleteEnabled, versioningEnabled, options = {}, params = {}) {
+    const s3 = new AWS.S3({...commonDefaultOptions, ...regionDefaultOptions(), ...options});
+    const mfaDeleteEnabledString = mfaDeleteEnabled ? 'Enabled' : 'Disabled';
+    const versioningEnabledString = versioningEnabled ? 'Enabled' : 'Suspended';
+    const requiredParams = {
+        Bucket: bucket,
+        VersioningConfiguration: {
+            MFADelete: mfaDeleteEnabledString,
+            Status: versioningEnabledString
+        }
+    };
+
+    return s3.putBucketVersioning({...requiredParams, ...params}).promise();
+}
+
 async function readHeaderLine(bucket, key, delimiter = '\n', quote = true, options = {}, params = {}) {
     const targetStream = MemoryStream.createWriteStream();
 
@@ -311,6 +326,7 @@ module.exports = {
     objectExists,
     putBucketEncryption,
     putBucketPolicy,
+    putBucketVersioning,
     readHeaderLine,
     readLines,
     upload,
